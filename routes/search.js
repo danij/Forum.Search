@@ -6,6 +6,13 @@ var router = express.Router();
 var pool = new pg.Pool();
 
 var maxResults = parseInt(process.env.MAXRESULTS || '25');
+var prefix = process.env.RESPONSE_PREFIX || 'while(1);';
+
+function sendReplyWithPrefix(res, data) {
+
+    res.statusCode = 200;
+    res.send(prefix + JSON.stringify(data));
+}
 
 function executeQuery(query, parameters, resCallback, errCallback) {
 
@@ -51,7 +58,7 @@ function performSearch(req, res, query, outputName) {
 
             output.push(queryResult.rows[i].id);
         }
-        res.send(result);
+        sendReplyWithPrefix(res, result);
 
     }, function() {
 
