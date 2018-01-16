@@ -5,7 +5,7 @@ var router = express.Router();
 
 var pool = new pg.Pool();
 
-var maxResults = 100;
+var maxResults = parseInt(process.env.MAXRESULTS || '25');
 
 function executeQuery(query, parameters, resCallback, errCallback) {
 
