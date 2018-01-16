@@ -23,4 +23,6 @@ app.use(function (err, req, res, next) {
     res.send(req.app.get('env') === 'development' ? err : 'error');
 });
 
+app.disable('x-powered-by');
+
 module.exports = app;
