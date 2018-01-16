@@ -33,12 +33,7 @@ function executeQuery(query, parameters, resCallback, errCallback) {
     });
 }
 
-router.get('/threads', function (req, res, next) {
-
-    var query = 'SELECT id FROM threads \n' +
-        'WHERE phraseto_tsquery($1) @@ name\n' +
-        'ORDER BY ts_rank(name, phraseto_tsquery($1)) DESC\n' +
-        'LIMIT ' + maxResults;
+function performSearch(req, res, query, outputName) {
 
     var toSearch = (req.query['q'] || '').trim();
     if (toSearch.length < 1) {
@@ -49,13 +44,12 @@ router.get('/threads', function (req, res, next) {
 
     executeQuery(query, [toSearch], function (queryResult) {
 
-        var result = {
-            thread_ids: []
-        };
+        var result = {};
+        var output = result[outputName] = [];
 
         for (var i = 0; i < queryResult.rowCount; ++i) {
 
-            result.thread_ids.push(queryResult.rows[i].id);
+            output.push(queryResult.rows[i].id);
         }
         res.send(result);
 
@@ -64,6 +58,17 @@ router.get('/threads', function (req, res, next) {
         res.statusCode = 500;
         res.send('Error executing the query');
     });
+
+}
+
+router.get('/threads', function (req, res, next) {
+
+    var query = 'SELECT id FROM threads \n' +
+        'WHERE phraseto_tsquery($1) @@ name\n' +
+        'ORDER BY ts_rank(name, phraseto_tsquery($1)) DESC\n' +
+        'LIMIT ' + maxResults;
+
+    performSearch(req, res, query, 'thread_ids');
 });
 
 router.get('/thread_messages', function (req, res, next) {
@@ -73,30 +78,7 @@ router.get('/thread_messages', function (req, res, next) {
         'ORDER BY ts_rank(content, phraseto_tsquery($1)) DESC\n' +
         'LIMIT ' + maxResults;
 
-    var toSearch = (req.query['q'] || '').trim();
-    if (toSearch.length < 1) {
-
-        res.statusCode = 400;
-        res.send('Query should not be empty');
-    }
-
-    executeQuery(query, [toSearch], function (queryResult) {
-
-        var result = {
-            thread_message_ids: []
-        };
-
-        for (var i = 0; i < queryResult.rowCount; ++i) {
-
-            result.thread_ids.push(queryResult.rows[i].id);
-        }
-        res.send(result);
-
-    }, function() {
-
-        res.statusCode = 500;
-        res.send('Error executing the query');
-    });
+    performSearch(req, res, query, 'thread_message_ids');
 });
 
 module.exports = router;
