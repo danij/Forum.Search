@@ -71,7 +71,7 @@ function performSearch(req, res, query, outputName) {
 router.get('/threads', function (req, res, next) {
 
     var query = 'SELECT id FROM threads \n' +
-        'WHERE phraseto_tsquery($1) @@ name\n' +
+        'WHERE plainto_tsquery($1) @@ name\n' +
         'ORDER BY ts_rank(name, phraseto_tsquery($1)) DESC\n' +
         'LIMIT ' + maxResults;
 
@@ -81,7 +81,7 @@ router.get('/threads', function (req, res, next) {
 router.get('/thread_messages', function (req, res, next) {
 
     var query = 'SELECT id FROM thread_messages \n' +
-        'WHERE phraseto_tsquery($1) @@ content\n' +
+        'WHERE plainto_tsquery($1) @@ content\n' +
         'ORDER BY ts_rank(content, phraseto_tsquery($1)) DESC\n' +
         'LIMIT ' + maxResults;
 
