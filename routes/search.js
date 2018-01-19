@@ -7,6 +7,20 @@ var pool = new pg.Pool();
 
 var maxResults = parseInt(process.env.MAXRESULTS || '25');
 var prefix = process.env.RESPONSE_PREFIX || 'while(1);';
+var oneRequestPerIPEveryMilliseconds = 1000;
+
+var latestRequestPerIp = {};
+
+function isRequestAllowed(req) {
+
+    var now = (new Date).getTime();
+    var ip = req.headers['x-forwarded-for'];
+
+    var previousRequestAt = latestRequestPerIp[ip] || 0;
+    latestRequestPerIp[ip] = now;
+
+    return (now - previousRequestAt) > oneRequestPerIPEveryMilliseconds;
+}
 
 function sendReplyWithPrefix(res, data) {
 
@@ -41,6 +55,12 @@ function executeQuery(query, parameters, resCallback, errCallback) {
 }
 
 function performSearch(req, res, query, outputName) {
+
+    if ( ! isRequestAllowed(req)) {
+
+        res.statusCode = 429;
+        res.send('Throttled');
+    }
 
     var toSearch = (req.query['q'] || '').trim();
     if (toSearch.length < 1) {
