@@ -24,8 +24,14 @@ function isRequestAllowed(req) {
 
 function sendReplyWithPrefix(res, data) {
 
-    res.statusCode = 200;
-    res.send(prefix + JSON.stringify(data));
+    try {
+
+        res.statusCode = 200;
+        res.send(prefix + JSON.stringify(data));
+    }
+    catch(e) {
+        //do nothing
+    }
 }
 
 function executeQuery(query, parameters, resCallback, errCallback) {
@@ -60,6 +66,7 @@ function performSearch(req, res, query, outputName) {
 
         res.statusCode = 429;
         res.send('Throttled');
+        return;
     }
 
     var toSearch = (req.query['q'] || '').trim();
@@ -67,6 +74,7 @@ function performSearch(req, res, query, outputName) {
 
         res.statusCode = 400;
         res.send('Query should not be empty');
+        return;
     }
 
     executeQuery(query, [toSearch], function (queryResult) {
