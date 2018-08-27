@@ -1,9 +1,9 @@
-var express = require('express');
-var logger = require('morgan');
+const express = require('express');
+const logger = require('morgan');
 
-var search = require('./routes/search');
+const search = require('./routes/search');
 
-var app = express();
+const app = express();
 
 app.use(logger('dev'));
 

@@ -1,22 +1,21 @@
-var express = require('express');
-var pg = require('pg');
+const express = require('express');
+const router = express.Router();
+const pg = require('pg');
 
-var router = express.Router();
+const pool = new pg.Pool();
 
-var pool = new pg.Pool();
+const maxResults = parseInt(process.env.MAXRESULTS || '25');
+const prefix = process.env.RESPONSE_PREFIX || 'while(1);';
+const oneRequestPerIPEveryMilliseconds = 1000;
 
-var maxResults = parseInt(process.env.MAXRESULTS || '25');
-var prefix = process.env.RESPONSE_PREFIX || 'while(1);';
-var oneRequestPerIPEveryMilliseconds = 1000;
-
-var latestRequestPerIp = {};
+const latestRequestPerIp = {};
 
 function isRequestAllowed(req) {
 
-    var now = (new Date).getTime();
-    var ip = req.headers['x-forwarded-for'];
+    const now = (new Date).getTime();
+    const ip = req.headers['x-forwarded-for'];
 
-    var previousRequestAt = latestRequestPerIp[ip] || 0;
+    const previousRequestAt = latestRequestPerIp[ip] || 0;
     latestRequestPerIp[ip] = now;
 
     return (now - previousRequestAt) > oneRequestPerIPEveryMilliseconds;
@@ -36,7 +35,7 @@ function sendReplyWithPrefix(res, data) {
 
 function executeQuery(query, parameters, resCallback, errCallback) {
 
-    pool.connect(function (err, client, done) {
+    pool.connect((err, client, done) => {
 
         if (err) {
 
@@ -44,7 +43,7 @@ function executeQuery(query, parameters, resCallback, errCallback) {
         }
         else if (client) {
 
-            client.query(query, parameters, function (err, res) {
+            client.query(query, parameters, (err, res) => {
 
                 if (err) {
 
@@ -69,7 +68,7 @@ function performSearch(req, res, query, outputName) {
         return;
     }
 
-    var toSearch = (req.query['q'] || '').trim();
+    const toSearch = (req.query['q'] || '').trim();
     if (toSearch.length < 1) {
 
         res.statusCode = 400;
@@ -77,10 +76,10 @@ function performSearch(req, res, query, outputName) {
         return;
     }
 
-    executeQuery(query, [toSearch], function (queryResult) {
+    executeQuery(query, [toSearch], (queryResult) => {
 
-        var result = {};
-        var output = result[outputName] = [];
+        const result = {};
+        const output = result[outputName] = [];
 
         for (var i = 0; i < queryResult.rowCount; ++i) {
 
@@ -88,17 +87,16 @@ function performSearch(req, res, query, outputName) {
         }
         sendReplyWithPrefix(res, result);
 
-    }, function() {
+    }, () => {
 
         res.statusCode = 500;
         res.send('Error executing the query');
     });
-
 }
 
-router.get('/threads', function (req, res, next) {
+router.get('/threads', (req, res, next) => {
 
-    var query = 'SELECT id FROM threads \n' +
+    const query = 'SELECT id FROM threads \n' +
         'WHERE plainto_tsquery($1) @@ name\n' +
         'ORDER BY ts_rank(name, plainto_tsquery($1)) DESC\n' +
         'LIMIT ' + maxResults;
@@ -106,9 +104,9 @@ router.get('/threads', function (req, res, next) {
     performSearch(req, res, query, 'thread_ids');
 });
 
-router.get('/thread_messages', function (req, res, next) {
+router.get('/thread_messages', (req, res, next) => {
 
-    var query = 'SELECT id FROM thread_messages \n' +
+    const query = 'SELECT id FROM thread_messages \n' +
         'WHERE plainto_tsquery($1) @@ content\n' +
         'ORDER BY ts_rank(content, plainto_tsquery($1)) DESC\n' +
         'LIMIT ' + maxResults;
