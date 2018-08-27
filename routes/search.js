@@ -7,13 +7,16 @@ const pool = new pg.Pool();
 const maxResults = parseInt(process.env.MAXRESULTS || '25');
 const prefix = process.env.RESPONSE_PREFIX || 'while(1);';
 const oneRequestPerIPEveryMilliseconds = 1000;
+const trustForwardedIP = process.env.TRUST_FORWARDED_IP;
 
 const latestRequestPerIp = {};
 
 function isRequestAllowed(req) {
 
     const now = (new Date).getTime();
-    const ip = req.headers['x-forwarded-for'];
+    const ip = trustForwardedIP
+        ? req.headers['x-forwarded-for']
+        : req.connection.remoteAddress;
 
     const previousRequestAt = latestRequestPerIp[ip] || 0;
     latestRequestPerIp[ip] = now;
