@@ -111,7 +111,7 @@ router.get('/thread_messages', (req, res, next) => {
 
     const query = 'SELECT id FROM thread_messages \n' +
         'WHERE plainto_tsquery($1) @@ content\n' +
-        'ORDER BY ts_rank(content, plainto_tsquery($1)) DESC\n' +
+        //'ORDER BY ts_rank(content, plainto_tsquery($1)) DESC\n' +
         'LIMIT ' + maxResults;
 
     performSearch(req, res, query, 'thread_message_ids');
