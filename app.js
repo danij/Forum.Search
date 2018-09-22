@@ -5,7 +5,7 @@ const search = require('./routes/search');
 
 const app = express();
 
-app.use(logger('dev'));
+app.use(logger('common'));
 
 app.use('/', search);
 
