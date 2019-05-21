@@ -150,6 +150,7 @@ async function main() {
 
         await importFile(client, filePath);
     }
+    process.exit();
 }
 
 main();
